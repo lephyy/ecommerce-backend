@@ -3,11 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
+    protected $fileUploadService;
+    // Inject the service via constructor
+    public function __construct(FileUploadService $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+    }
     public function index(){
         $products = Product::all();
         return response()->json([
@@ -43,13 +50,14 @@ class ProductController extends Controller
         $product->pro_desc = $request->input('descr');
         $product->pro_stock = $request->input('stock');
         $product->pro_status = $request->input('status');
-        if($request->hasFile(key: 'img')){
-            $image = $request->file(key: 'img');
-            $imageName = time().'.'.$image->getClientOriginalExtension();
-            $image->move(public_path('images'), $imageName);
-            $product->pro_image = $imageName;
+
+        if ($request->hasFile('img')) {
+            $path = $this->fileUploadService->upload($request->file('img'), 'products');
+            $product->pro_image = $path;
         }
+
         $product->save();
+
         return response()->json([
                 'status' => '200',
                 'message' => $product
