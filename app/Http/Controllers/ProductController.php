@@ -62,5 +62,28 @@ class ProductController extends Controller
                 'status' => '200',
                 'message' => $product
             ]);
+    }
+
+    public function show($pro_id){
+        $product = Product::find($pro_id);
+        if(!$product){
+            return response()->json([
+                'status' => '404',
+                'message' => 'Product not found'
+            ]);
         }
+        try{
+            return response()->json([
+            'status' => '200',
+            'data' => $product
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'status' => '500',
+                'message' => 'An error occurred while fetching the product'
+            ]);
+        }
+
+    }
 }
