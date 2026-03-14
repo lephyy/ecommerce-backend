@@ -86,4 +86,55 @@ class ProductController extends Controller
         }
 
     }
+
+    public function update(Request $request, $pro_id){
+        $product = Product::find($pro_id);
+        if(!$product){
+            return response()->json([
+                'status' => '404',
+                'message' => 'Product not found'
+            ]);
+        }
+
+        $validate = Validator::make($request->all(),[
+            //Make sure the validation rules match the actual field names in the request(postman)
+            'name' => 'required',
+            'price' => 'required|numeric',
+            'descr' => 'required',
+            'stock' => 'required|numeric',
+            'status' => 'required',
+            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+        ]);
+
+        if($validate->fails()){
+            return response()->json([
+                'status' => '400',
+                'error' => $validate->errors()
+            ]);
+        }
+
+        $product->pro_name = $request->input('name');
+        $product->pro_price = $request->input('price');
+        $product->pro_desc = $request->input('descr');
+        $product->pro_stock = $request->input('stock');
+        $product->pro_status = $request->input('status');
+
+        if ($request->hasFile('img')) {
+            // Delete old image if exists
+            if ($product->pro_image) {
+                $this->fileUploadService->delete($product->pro_image);
+            }
+            // Upload new image
+            $path = $this->fileUploadService->upload($request->file('img'), 'products');
+            $product->pro_image = $path;
+        }
+
+        $product->save();
+
+        return response()->json([
+                'status' => '200',
+                'message' => $product
+            ]);
+
+    }
 }
