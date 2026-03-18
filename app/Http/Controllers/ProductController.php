@@ -137,4 +137,26 @@ class ProductController extends Controller
             ]);
 
     }
+
+    public function destroy($pro_id){
+      $product = Product::find($pro_id);
+      if($product === null){
+        return response()->json([
+            'status' => 404,
+            'message' => 'Product Not Found',
+        ], 404);
+      }
+
+        // Delete the image file if it exists
+        if($product->pro_image){
+            $this->fileUploadService->delete($product->pro_image);
+        }
+
+        $product->delete();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product Deleted Successfully',
+        ], 200);
+    }
 }
